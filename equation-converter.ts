@@ -96,4 +96,28 @@ export class EquationConverter {
         }
         return equationOutput;
     }
+
+    public convertEquationToLatex2(equation: string): string{
+        let bracketNeeded = false;
+        let equationOutput = '';
+        let subEquation = '';
+        let substringStart = 0;
+        let substringEnd = 0;
+        let currentChar = '';
+
+        for (substringEnd; substringEnd <= equation.length; substringEnd++) {
+            switch (equation.charAt(substringEnd) === '('){
+                case true: { // current substring is in brackets
+                    substringEnd = this.findBracketEnd(equation, substringStart);
+                    break;
+                }
+                case false: { // current substring is without brackets
+
+                    break;
+                }
+            }
+        }
+
+        return equationOutput;
+    }
 }
