@@ -49,12 +49,12 @@ export class EquationConverter {
         return bracketEnd; // returns index of closing bracket for given opening bracket
     }
 
-    private subequationEndSearch(equation: string, subequationStart: number): number {
+    private subequationEndSearch( equation: string, subequationStart: number): number {
         let subequationEnd = subequationStart;
 
         for (subequationEnd; subequationEnd <= equation.length; subequationEnd++) {
             if (this.equationDelimeters.indexOf(equation.charAt(subequationEnd)) > -1) {
-                return subequationEnd;
+                return subequationEnd; 
             }
         }
         return subequationEnd; // returns index of next equation delimeter
@@ -97,35 +97,36 @@ export class EquationConverter {
                     }
                 }
             } else
-                if (equation.charAt(substringEnd) === '/') {
-                    subEquation = equation.slice(substringStart, substringEnd);
-                    equationOutput = equationOutput.concat('\\frac{', subEquation, '}{');
-                    if (equation.charAt(substringEnd + 1) === '(') {
-                        substringStart = substringEnd + 2;
-                        substringEnd = this.findBracketEnd(equation, substringStart);
-                        subEquation = this.convertEquationToLatex(equation.slice(substringStart, substringEnd));
-                        equationOutput = equationOutput.concat(subEquation, '}');
-                    } else {
-                        substringStart = substringEnd + 1;
-                        subEquation = this.findSubequation(equation.slice(substringStart));
-                        substringEnd += subEquation.length;
-                        substringStart = substringEnd + 1;
-                        equationOutput = equationOutput.concat(subEquation, '}');
-                    }
-                } else
-                    if (equation.charAt(substringEnd) === '^') {
-                        subEquation = this.findSubequation(equation.slice(substringEnd + 1));
-                        substringEnd += subEquation.length;
-                        substringStart = substringEnd + 1;
-                        equationOutput = equationOutput.concat('^{', subEquation, '}');
-                    } else
-                        if (this.signsArray.indexOf(equation.charAt(substringEnd)) > -1) {
-                            equationOutput = equationOutput.concat(equation.slice(substringStart, substringEnd + 1));
-                            substringStart = substringEnd + 1;
-                        }
+            if (equation.charAt(substringEnd) === '/') {
+                subEquation = equation.slice(substringStart, substringEnd);
+                equationOutput = equationOutput.concat('\\frac{', subEquation, '}{');
+                if (equation.charAt(substringEnd + 1) === '(') {
+                    substringStart = substringEnd + 2;
+                    substringEnd = this.findBracketEnd(equation, substringStart);
+                    subEquation = this.convertEquationToLatex(equation.slice(substringStart, substringEnd));
+                    equationOutput = equationOutput.concat(subEquation, '}');
+                } else {
+                    substringStart = substringEnd + 1;
+                    subEquation = this.findSubequation(equation.slice(substringStart));
+                    substringEnd += subEquation.length;
+                    substringStart = substringEnd + 1;
+                    equationOutput = equationOutput.concat(subEquation, '}');
+                }
+            } else
+            if (equation.charAt(substringEnd) === '^') {
+                equationOutput = equationOutput.concat(equation.slice(substringStart, substringEnd));
+                subEquation = this.findSubequation(equation.slice(substringEnd + 1));
+                substringEnd += subEquation.length;
+                substringStart = substringEnd + 1;
+                equationOutput = equationOutput.concat('^{', subEquation, '}');
+            } else
+            if (this.signsArray.indexOf(equation.charAt(substringEnd)) > -1) {
+                equationOutput = equationOutput.concat(equation.slice(substringStart, substringEnd + 1));
+                substringStart = substringEnd + 1;
+            }
         }
-        if (substringStart != substringEnd - 1) {
-            equationOutput = equation.slice(substringStart, substringEnd);
+        if (substringStart !== substringEnd - 1 && subEquation === '') {
+            equationOutput = equationOutput.concat(equation.slice(substringStart, substringEnd));
         }
         return equationOutput;
     }
@@ -226,9 +227,9 @@ export class EquationConverter {
                 }
                 case false: { // current substring is without brackets
                     substringEnd = this.subequationEndSearch(equation, substringStart);
-                    subEquation = equation.slice(substringStart)
+                    subEquation = equation.slice(substringStart, substringEnd);
 
-                    substringEnd += 1;
+                   // substringEnd += 1;
                     if (equation.charAt(substringStart - 1) === '*' || equation.charAt(substringEnd) === '^') { bracketNeeded = true; }
 
                     substringStart = substringEnd + 1;
@@ -255,12 +256,7 @@ export class EquationConverter {
                             } else {
                                 substringEnd = this.subequationEndSearch(equation, substringStart);
                                 subEquation = equation.slice(substringStart, substringEnd);
-                                if (equation.charAt(substringEnd) === '(') {
-                                    substringStart = substringEnd;
-                                    substringEnd = this.bracketEndSearch(equation, substringStart);
-                                    subEquation = subEquation.concat('(', equation.slice(substringStart + 1, substringEnd));
-                                }
-                                equationOutput = equationOutput.concat(subEquation, equation.charAt(substringEnd));
+                                equationOutput = equationOutput.concat(subEquation, '}', equation.charAt(substringEnd));
                                 substringEnd += 1;
                                 substringStart = substringEnd + 1;
                             }
