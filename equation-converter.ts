@@ -34,7 +34,7 @@ export class EquationConverter {
     ////
 
     private bracketEndSearch(equation: string, subequationStart: number): number {
-        let bracketEnd = subequationStart;
+        let bracketEnd = subequationStart + 1;
         let bracketCounter = 0;
 
         for (bracketEnd; bracketEnd <= equation.length; bracketEnd++) {
@@ -49,12 +49,12 @@ export class EquationConverter {
         return bracketEnd; // returns index of closing bracket for given opening bracket
     }
 
-    private subequationEndSearch( equation: string, subequationStart: number): number {
+    private subequationEndSearch(equation: string, subequationStart: number): number {
         let subequationEnd = subequationStart;
 
         for (subequationEnd; subequationEnd <= equation.length; subequationEnd++) {
             if (this.equationDelimeters.indexOf(equation.charAt(subequationEnd)) > -1) {
-                return subequationEnd; 
+                return subequationEnd;
             }
         }
         return subequationEnd; // returns index of next equation delimeter
@@ -97,40 +97,40 @@ export class EquationConverter {
                     }
                 }
             } else
-            if (equation.charAt(substringEnd) === '/') {
-                subEquation = equation.slice(substringStart, substringEnd);
-                equationOutput = equationOutput.concat('\\frac{', subEquation, '}{');
-                if (equation.charAt(substringEnd + 1) === '(') {
-                    substringStart = substringEnd + 2;
-                    substringEnd = this.findBracketEnd(equation, substringStart);
-                    subEquation = this.convertEquationToLatex(equation.slice(substringStart, substringEnd));
-                    equationOutput = equationOutput.concat(subEquation, '}');
-                } else {
-                    substringStart = substringEnd + 1;
-                    subEquation = this.findSubequation(equation.slice(substringStart));
-                    substringEnd += subEquation.length;
-                    substringStart = substringEnd + 1;
-                    equationOutput = equationOutput.concat(subEquation, '}');
-                }
-            } else
-            if (equation.charAt(substringEnd) === '^') {
-                subEquation = this.findSubequation(equation.slice(substringEnd + 1));
-                substringEnd += subEquation.length;
-                substringStart = substringEnd + 1;
-                equationOutput = equationOutput.concat('^{', subEquation, '}');
-            } else
-            if (this.signsArray.indexOf(equation.charAt(substringEnd)) > -1) {
-                equationOutput = equationOutput.concat(equation.slice(substringStart, substringEnd + 1));
-                substringStart = substringEnd + 1;
-            }
+                if (equation.charAt(substringEnd) === '/') {
+                    subEquation = equation.slice(substringStart, substringEnd);
+                    equationOutput = equationOutput.concat('\\frac{', subEquation, '}{');
+                    if (equation.charAt(substringEnd + 1) === '(') {
+                        substringStart = substringEnd + 2;
+                        substringEnd = this.findBracketEnd(equation, substringStart);
+                        subEquation = this.convertEquationToLatex(equation.slice(substringStart, substringEnd));
+                        equationOutput = equationOutput.concat(subEquation, '}');
+                    } else {
+                        substringStart = substringEnd + 1;
+                        subEquation = this.findSubequation(equation.slice(substringStart));
+                        substringEnd += subEquation.length;
+                        substringStart = substringEnd + 1;
+                        equationOutput = equationOutput.concat(subEquation, '}');
+                    }
+                } else
+                    if (equation.charAt(substringEnd) === '^') {
+                        subEquation = this.findSubequation(equation.slice(substringEnd + 1));
+                        substringEnd += subEquation.length;
+                        substringStart = substringEnd + 1;
+                        equationOutput = equationOutput.concat('^{', subEquation, '}');
+                    } else
+                        if (this.signsArray.indexOf(equation.charAt(substringEnd)) > -1) {
+                            equationOutput = equationOutput.concat(equation.slice(substringStart, substringEnd + 1));
+                            substringStart = substringEnd + 1;
+                        }
         }
-        if (equationOutput === '') {
-            equationOutput = equation;
+        if (substringStart != substringEnd - 1) {
+            equationOutput = equation.slice(substringStart, substringEnd);
         }
         return equationOutput;
     }
 
-    public convertEquationToLatex2(equation: string): string{
+    public convertEquationToLatex2(equation: string): string {
         let bracketNeeded = false;
         let equationOutput = '';
         let subEquation = '';
@@ -139,36 +139,173 @@ export class EquationConverter {
         let currentChar = '';
 
         for (substringEnd; substringEnd <= equation.length; substringEnd++) {
-            switch (equation.charAt(substringEnd) === '('){
+            switch (equation.charAt(substringEnd) === '(') {
                 case true: { // current substring is in brackets
                     substringEnd = this.bracketEndSearch(equation, substringStart);
-                    subEquation = equation.slice(substringStart, substringEnd);
-                    
+                    subEquation = this.convertEquationToLatex2(equation.slice(substringStart + 1, substringEnd));
+
                     substringEnd += 1;
-                    if(equation.charAt(substringStart - 1) === "*" || equation.charAt(substringEnd) === "^") { bracketNeeded = true;}
-                    
+                    if (equation.charAt(substringStart - 1) === '*' || equation.charAt(substringEnd) === '^') { bracketNeeded = true; }
+
                     substringStart = substringEnd + 1;
 
-                    switch (equation.charAt(substringEnd)){
-                        case "/": {
+                    switch (equation.charAt(substringEnd)) {
+                        case '/': {
+                            if (bracketNeeded) {
+                                equationOutput = equationOutput.concat('(\\frac{', subEquation, '}{');
+                            } else {
+                                equationOutput = equationOutput.concat('\\frac{', subEquation, '}{');
+                            }
+                            if (equation.charAt(substringStart) === '(') {
+                                substringEnd = this.bracketEndSearch(equation, substringStart);
+                                subEquation = this.convertEquationToLatex2(equation.slice(substringStart + 1, substringEnd));
+                                if (bracketNeeded) {
+                                    equationOutput = equationOutput.concat(subEquation, '})');
+                                    bracketNeeded = false;
+                                } else {
+                                    equationOutput = equationOutput.concat(subEquation, '}');
+                                }
+                                substringEnd += 1;
+                                substringStart = substringEnd + 1;
 
+                            } else {
+                                substringEnd = this.subequationEndSearch(equation, substringStart);
+                                subEquation = equation.slice(substringStart, substringEnd);
+                                if (equation.charAt(substringEnd) === '(') {
+                                    substringStart = substringEnd;
+                                    substringEnd = this.bracketEndSearch(equation, substringStart);
+                                    subEquation = subEquation.concat('(', equation.slice(substringStart + 1, substringEnd));
+                                }
+                                equationOutput = equationOutput.concat(subEquation, equation.charAt(substringEnd));
+                                substringEnd += 1;
+                                substringStart = substringEnd + 1;
+                            }
+                            break;
                         }
 
-                        case "_": {
-
+                        case '_': {
+                            if (bracketNeeded) {
+                                equationOutput = equationOutput.concat('(', subEquation, '_');
+                            } else {
+                                equationOutput = equationOutput.concat(subEquation, '_');
+                            }
+                            substringEnd = this.subequationEndSearch(equation, substringStart);
+                            if (bracketNeeded) {
+                                equationOutput = equationOutput.concat(
+                                    '{', equation.slice(substringStart, substringEnd), '})', equation.charAt(substringEnd));
+                                    bracketNeeded = false;
+                            } else {
+                                equationOutput = equationOutput.concat(
+                                    '{', equation.slice(substringStart, substringEnd), '}', equation.charAt(substringEnd));
+                            }
+                            break;
                         }
-                        
-                        case "^":{
-                            
-                        }
-                        default :{
 
+                        case '^': {
+                            if (bracketNeeded) {
+                                equationOutput = equationOutput.concat('(', subEquation, ')', equation.charAt(substringEnd));
+                            } else {
+                                equationOutput = equationOutput.concat(subEquation, equation.charAt(substringEnd));
+                            }
+                            substringEnd = this.subequationEndSearch(equation, substringStart);
+                            equationOutput = equationOutput.concat(
+                                '{', equation.slice(substringStart, substringEnd), '}', equation.charAt(substringEnd));
+                                substringStart = substringEnd + 1;
+                            break;
+                        }
+                        default: {
+                            if (bracketNeeded) {
+                                equationOutput = equationOutput.concat('(', subEquation, ')', equation.charAt(substringEnd));
+                            } else {
+                                equationOutput = equationOutput.concat(subEquation, equation.charAt(substringEnd));
+                            }
+                            break;
                         }
                     }
                     break;
                 }
                 case false: { // current substring is without brackets
-                    
+                    substringEnd = this.subequationEndSearch(equation, substringStart);
+                    subEquation = equation.slice(substringStart)
+
+                    substringEnd += 1;
+                    if (equation.charAt(substringStart - 1) === '*' || equation.charAt(substringEnd) === '^') { bracketNeeded = true; }
+
+                    substringStart = substringEnd + 1;
+
+                    switch (equation.charAt(substringEnd)) {
+                        case '/': {
+                            if (bracketNeeded) {
+                                equationOutput = equationOutput.concat('(\\frac{', subEquation, '}{');
+                            } else {
+                                equationOutput = equationOutput.concat('\\frac{', subEquation, '}{');
+                            }
+                            if (equation.charAt(substringStart) === '(') {
+                                substringEnd = this.bracketEndSearch(equation, substringStart);
+                                subEquation = this.convertEquationToLatex2(equation.slice(substringStart + 1, substringEnd));
+                                if (bracketNeeded) {
+                                    equationOutput = equationOutput.concat(subEquation, '})');
+                                    bracketNeeded = false;
+                                } else {
+                                    equationOutput = equationOutput.concat(subEquation, '}');
+                                }
+                                substringEnd += 1;
+                                substringStart = substringEnd + 1;
+
+                            } else {
+                                substringEnd = this.subequationEndSearch(equation, substringStart);
+                                subEquation = equation.slice(substringStart, substringEnd);
+                                if (equation.charAt(substringEnd) === '(') {
+                                    substringStart = substringEnd;
+                                    substringEnd = this.bracketEndSearch(equation, substringStart);
+                                    subEquation = subEquation.concat('(', equation.slice(substringStart + 1, substringEnd));
+                                }
+                                equationOutput = equationOutput.concat(subEquation, equation.charAt(substringEnd));
+                                substringEnd += 1;
+                                substringStart = substringEnd + 1;
+                            }
+                            break;
+                        }
+
+                        case '_': {
+                            if (bracketNeeded) {
+                                equationOutput = equationOutput.concat('(', subEquation, '_');
+                            } else {
+                                equationOutput = equationOutput.concat(subEquation, '_');
+                            }
+                            substringEnd = this.subequationEndSearch(equation, substringStart);
+                            if (bracketNeeded) {
+                                equationOutput = equationOutput.concat(
+                                    '{', equation.slice(substringStart, substringEnd), '})', equation.charAt(substringEnd));
+                                    bracketNeeded = false;
+                            } else {
+                                equationOutput = equationOutput.concat(
+                                    '{', equation.slice(substringStart, substringEnd), '}', equation.charAt(substringEnd));
+                            }
+                            break;
+                        }
+
+                        case '^': {
+                            if (bracketNeeded) {
+                                equationOutput = equationOutput.concat('(', subEquation, ')', equation.charAt(substringEnd));
+                            } else {
+                                equationOutput = equationOutput.concat(subEquation, equation.charAt(substringEnd));
+                            }
+                            substringEnd = this.subequationEndSearch(equation, substringStart);
+                            equationOutput = equationOutput.concat(
+                                '{', equation.slice(substringStart, substringEnd), '}', equation.charAt(substringEnd));
+                                substringStart = substringEnd + 1;
+                            break;
+                        }
+                        default: {
+                            if (bracketNeeded) {
+                                equationOutput = equationOutput.concat('(', subEquation, ')', equation.charAt(substringEnd));
+                            } else {
+                                equationOutput = equationOutput.concat(subEquation, equation.charAt(substringEnd));
+                            }
+                            break;
+                        }
+                    }
                     break;
                 }
             }
