@@ -1,5 +1,7 @@
 export class EquationConverter {
     private signsArray: Array<string> = ["+", "-", "*", ","];
+    private equationDelimeters: Array<string> = ["+", "-", "*", "/", ",", "^", "_", "("]
+    ////
 
     constructor() { }
     private findBracketEnd(equation: string, bracketStart: number): number {
@@ -28,6 +30,37 @@ export class EquationConverter {
         }
         return equation;
     }
+
+    ////
+
+    private bracketEndSearch(equation: string, subequationStart: number): number {
+        let bracketEnd = subequationStart;
+        let bracketCounter = 0;
+
+        for (bracketEnd; bracketEnd <= equation.length; bracketEnd++) {
+            if (equation.charAt(bracketEnd) === '(') {
+                bracketCounter++;
+            } else if (equation.charAt(bracketEnd) === ')') {
+                if (bracketCounter === 0) {
+                    return bracketEnd;
+                } else { bracketCounter--; }
+            }
+        }
+        return bracketEnd; // returns index of closing bracket for given opening bracket
+    }
+
+    private subequationEndSearch( equation: string, subequationStart: number): number {
+        let subequationEnd = subequationStart;
+
+        for (subequationEnd; subequationEnd <= equation.length; subequationEnd++) {
+            if (this.equationDelimeters.indexOf(equation.charAt(subequationEnd)) > -1) {
+                return subequationEnd; 
+            }
+        }
+        return subequationEnd; // returns index of next equation delimeter
+    }
+
+    ////
 
     public convertEquationToLatex(equation: string): string {
         let bracketNeeded = false;
@@ -108,11 +141,34 @@ export class EquationConverter {
         for (substringEnd; substringEnd <= equation.length; substringEnd++) {
             switch (equation.charAt(substringEnd) === '('){
                 case true: { // current substring is in brackets
-                    substringEnd = this.findBracketEnd(equation, substringStart);
+                    substringEnd = this.bracketEndSearch(equation, substringStart);
+                    subEquation = equation.slice(substringStart, substringEnd);
+                    
+                    substringEnd += 1;
+                    if(equation.charAt(substringStart - 1) === "*" || equation.charAt(substringEnd) === "^") { bracketNeeded = true;}
+                    
+                    substringStart = substringEnd + 1;
+
+                    switch (equation.charAt(substringEnd)){
+                        case "/": {
+
+                        }
+
+                        case "_": {
+
+                        }
+                        
+                        case "^":{
+                            
+                        }
+                        default :{
+
+                        }
+                    }
                     break;
                 }
                 case false: { // current substring is without brackets
-
+                    
                     break;
                 }
             }
